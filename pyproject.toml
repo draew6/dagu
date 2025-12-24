@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "dagu"
+version = "0.0.1"
+description = "Dagu"
+authors = ["draew6"]
+packages = [{ include = "dagu" }]
+requires-python = ">=3.13"
+
+[tool.poetry.dependencies]
+python = ">=3.13"
+httpx = ">0.28,<1.0.0"
+pydantic-settings = ">=2.0,<3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
