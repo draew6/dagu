@@ -103,7 +103,7 @@ class Dagu:
     async def send_event(self, name: str, data: dict):
         """Send event."""
         workflows = await self._get_workflows()
-        flows = [Flow(file_name=flow["fileName"], tags=flow["dag"]["dags"]) for flow in workflows]
+        flows = [Flow(file_name=flow["fileName"], tags=flow["dag"]["tags"]) for flow in workflows]
         for flow in flows:
             if name in flow.tags:
                 await self.enqueue_run(flow.file_name, params=data)
