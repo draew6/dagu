@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dagu"
-version = "0.0.2"
+version = "0.0.3"
 description = "Dagu"
 authors = ["draew6"]
 packages = [{ include = "dagu" }]
