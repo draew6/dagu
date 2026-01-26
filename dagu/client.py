@@ -12,6 +12,7 @@ class Flow(BaseModel):
 
 Status = Literal["not_started", "running", "failed", "cancelled", "success", "skipped"]
 
+
 class Dagu:
     def __init__(self):
         settings = DaguSettings()
@@ -55,33 +56,22 @@ class Dagu:
         dag_run_id = api_response.json()["dagRunId"]
         return dag_run_id
 
-    async def _get_flow_detail(
-            self,
-            file_name: str
-    ):
+    async def _get_flow_detail(self, file_name: str):
         """Get flow detail."""
         endpoint = f"/dags/{file_name}"
         api_response = await self._client.request("GET", endpoint)
         api_response.raise_for_status()
         return api_response.json()
 
-    async def _get_last_dag_run_id_and_name(
-            self,
-            file_name: str
-    ):
+    async def _get_last_dag_run_id_and_name(self, file_name: str):
         """Get last dag run."""
         detail = await self._get_flow_detail(file_name)
         run_id = detail["latestDAGRun"]["dagRunId"]
         name = detail["latestDAGRun"]["name"]
         return run_id, name
 
-
     async def _update_step_status(
-            self,
-            name: str,
-            dag_run_id: str,
-            step_name: str,
-            status: Status
+        self, name: str, dag_run_id: str, step_name: str, status: Status
     ):
         status_mapping = {
             "not_started": 0,
@@ -89,16 +79,15 @@ class Dagu:
             "failed": 2,
             "cancelled": 3,
             "success": 4,
-            "skipped": 5
+            "skipped": 5,
         }
 
         """Update step status."""
         endpoint = f"/dag-runs/{name}/{dag_run_id}/steps/{step_name}/status"
         api_response = await self._client.request(
-        "PATCH", endpoint, json={"status": status_mapping[status]}
+            "PATCH", endpoint, json={"status": status_mapping[status]}
         )
         api_response.raise_for_status()
-
 
     async def set_step_status(self, file_name: str, step_name: str, status: Status):
         """Set step status."""
@@ -116,8 +105,29 @@ class Dagu:
     async def send_event(self, name: str, data: dict):
         """Send event."""
         workflows = await self._get_workflows()
-        flows = [Flow(file_name=flow["fileName"], tags=flow["dag"].get("tags", [])) for flow in workflows]
+        flows = [
+            Flow(file_name=flow["fileName"], tags=flow["dag"].get("tags", []))
+            for flow in workflows
+        ]
         for flow in flows:
             if name in flow.tags:
                 await self.enqueue_run(flow.file_name, params=data)
 
+    async def flow_history(self, file_name: str):
+        """Get flow history."""
+        endpoint = f"/dags/{file_name}/dag-runs"
+        api_response = await self._client.request("GET", endpoint)
+        api_response.raise_for_status()
+        return api_response.json()["dagRuns"]
+
+    async def is_flow_finished_with_parameter(
+        self, file_name: str, param_key: str, param_value: str
+    ) -> bool:
+        """Check if a flow has finished with a specific parameter."""
+        history = await self.flow_history(file_name)
+        for run in history:
+            if run["status"] in [1, 5]:  # running or queued
+                params = json.loads(run["params"] or "{}")
+                if params.get(param_key) == param_value:
+                    return False
+        return True
