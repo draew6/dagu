@@ -127,7 +127,23 @@ class Dagu:
         history = await self.flow_history(file_name)
         for run in history:
             if run["status"] in [1, 5]:  # running or queued
-                params = json.loads(run["params"] or "{}")
+                params = self._parse_params(run.get("params"))
                 if params.get(param_key) == param_value:
                     return False
         return True
+
+    @staticmethod
+    def _parse_params(params_str: str | None) -> dict:
+        """Parse 'KEY=value KEY2=value2' format back to dict."""
+        if not params_str or not params_str.strip():
+            return {}
+
+        result = {}
+        # Simple parsing - splits on space, then on first =
+        for part in params_str.split():
+            if "=" in part:
+                key, value = part.split("=", 1)
+                # Strip quotes if present
+                value = value.strip('"')
+                result[key] = value
+        return result
