@@ -17,7 +17,7 @@ class Dagu:
     def __init__(self):
         settings = DaguSettings()
         self._client = httpx.AsyncClient(
-            base_url=settings.dagu_base_url + "/api/v2",
+            base_url=settings.dagu_base_url + "/api/v1",
             timeout=10.0,
             auth=(settings.dagu_username, settings.dagu_password),
             headers={"Accept": "application/json", "Content-Type": "application/json"},
