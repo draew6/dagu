@@ -36,18 +36,7 @@ class Dagu:
     ) -> str:
         """Enqueue a run."""
         endpoint = f"/dags/{file_name}/enqueue"
-        params_str = None
-        if params:
-            # Convert dict to "KEY=value KEY2=value2" format
-            parts = []
-            for key, value in params.items():
-                if isinstance(value, (list, dict)):
-                    # JSON encode and wrap in quotes, escape inner quotes
-                    json_val = json.dumps(value).replace('"', '\\"')
-                    parts.append(f'{key}="{json_val}"')
-                else:
-                    parts.append(f"{key}={value}")
-            params_str = " ".join(parts)
+        params_str = json.dumps(params) if params else None
 
         api_response = await self._client.request(
             "POST", endpoint, json={"params": params_str}
