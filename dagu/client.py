@@ -36,7 +36,13 @@ class Dagu:
     ) -> str:
         """Enqueue a run."""
         endpoint = f"/dags/{file_name}/enqueue"
-        params_str = json.dumps(params) if params else None
+        params_str = None
+        if params:
+            serialized = {
+                k: json.dumps(v) if isinstance(v, (list, dict)) else v
+                for k, v in params.items()
+            }
+            params_str = json.dumps(serialized)
 
         api_response = await self._client.request(
             "POST", endpoint, json={"params": params_str}
